@@ -1,0 +1,53 @@
+{
+  "name": "accounts-api",
+  "version": "0.0.1",
+  "description": "This example app follows a few constraints to try and make it easy to plug into a node http server.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "tape tests/*.js | tap-spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LukeSwart/accounts-api.git"
+  },
+  "keywords": [
+    "accounts",
+    "api",
+    "accountdown",
+    "level"
+  ],
+  "author": "Luke Swart",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LukeSwart/accounts-api/issues"
+  },
+  "homepage": "https://github.com/LukeSwart/accounts-api",
+  "devDependencies": {
+    "hammock": "^1.0.2",
+    "memdb": "^1.0.1",
+    "memdown": "^1.0.0",
+    "tap-spec": "^4.0.2",
+    "tape": "^4.0.0"
+  },
+  "dependencies": {
+    "JSONStream": "^1.0.4",
+    "accountdown": "^4.1.0",
+    "accountdown-basic": "^1.1.0",
+    "accountdown-model": "^1.0.0",
+    "body": "^5.1.0",
+    "cuid": "^1.2.5",
+    "each-async": "^1.1.1",
+    "extend": "^3.0.0",
+    "filter-object": "^1.1.2",
+    "is-equal": "^1.2.3",
+    "jsonwebtoken": "^5.0.2",
+    "levelup": "^1.2.1",
+    "match-routes": "^2.0.0",
+    "response": "git://github.com/mikeal/response",
+    "subleveldown": "^2.0.0",
+    "through2": "^2.0.0"
+  }
+}
