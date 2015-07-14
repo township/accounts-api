@@ -1,6 +1,6 @@
-# example
+# accounts-api
 
-This example app follows a few constraints to try and make it easy to plug into a node http server.
+This app follows a few constraints to try and make it easy to plug into a node http server.
 
 The goal is a simple API resource that can be used on its own or in other servers.
 
@@ -16,14 +16,14 @@ var response = require('response')
 var levelup = require('levelup')
 var db = levelup('db', { db: require('memdown') })
 
-var example = require('./index')(db)
-
 var server = http.createServer(function (req, res) {
   /* 
   * if req.url matches a route, it will return, 
   * otherwise, another part of the application can respond 
   */
-  if (example.serve(req, res)) return
+  this.db = db
+  var accounts = requires('accounts-api')(this)
+  if (accounts.serve(req, res)) return
   response().json({ message: 'hi' }).pipe(res)
 })
 
@@ -44,5 +44,5 @@ server.listen(4444)
 - **handler.js**
   - takes the model as an argument, and parses requests to perform operations with the model
 - **model.js**
-  - provides CRUD and other necessary actions like validation, indexing, etc. this example uses leveldb but it could use anything
+  - provides CRUD and other necessary actions like validation, indexing, etc. This is based on accountdown and leveldb.
   

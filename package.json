@@ -1,6 +1,6 @@
 {
   "name": "accounts-api",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "This example app follows a few constraints to try and make it easy to plug into a node http server.",
   "main": "index.js",
   "directories": {
