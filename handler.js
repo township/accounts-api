@@ -5,8 +5,8 @@ var jsonBody = require('body/json')
 var through = require('through2')
 var filter = require('filter-object')
 
-var errorResponse = require('./lib/error-response')
-var tokens = require('./lib/tokens')
+var errorResponse = require('../../lib/error-response')
+var tokens = require('../../lib/tokens')
 
 module.exports = AccountsApiHandler
 
@@ -26,7 +26,7 @@ AccountsApiHandler.prototype.index = function (req, res) {
   var self = this
 
   var decoded = this.verify(req, res)
-  if (!decoded) return
+  //if (!decoded) return
 
   /*
    *  Get list of accounts
@@ -42,29 +42,23 @@ AccountsApiHandler.prototype.index = function (req, res) {
   /*
    *  Create a new account
    */
-
   else if (req.method === 'POST') {
-    if (!decoded.admin) return errorResponse(res, 401,'Must be admin to create new accounts')
     jsonBody(req, res, function (err, body) {
       if (err) return errorResponse(res, 500, err)
+
       var opts = {
         login: { basic: { key: body.key, password: body.password } },
         value: filter(body, '!password')
       }
 
-      self.model.create(body.key, opts, function (err) {
+      self.model.create(body.key, opts, function (err, account) {
         if (err) return errorResponse(res, 500, 'Unable to create new user' + err)
-
-        self.model.get(body.key, function (err, account) {
-          if (err) return errorResponse(res, 500, 'Server error' + err)
-
-          return response().status(200).json(account).pipe(res)
-        })
+        return response().status(200).json(account).pipe(res)
       })
     })
   }
+
   else return errorResponse(res, 405, 'request method not recognized: ' + req.method )
-  //})
 }
 
 /*
@@ -76,7 +70,7 @@ AccountsApiHandler.prototype.item = function (req, res, opts) {
   var self = this
 
   var decoded = this.verify(req, res)
-  if (!decoded) return
+  //if (!decoded) return
 
   /*
    *  Get individual account
@@ -120,6 +114,7 @@ AccountsApiHandler.prototype.item = function (req, res, opts) {
       return response().json(opts.params).pipe(res)
     })
   }
+
   else return errorResponse(res, 405, 'request method not recognized: ' + req.method )
 }
 
@@ -131,37 +126,30 @@ AccountsApiHandler.prototype.verify = function (req, res) {
     if (e.name === 'JsonWebTokenError' || e.name === 'TokenExpiredError') {
       return errorResponse(res, 401, 'Error verifying web token: ' + e.message)
     }
-    else throw e
+    throw e
   }
   return decoded
 }
 
 // assumes no token is passed, and 'authorization' header contain login creds
-AccountsApiHandler.prototype.auth = function (req, res, cb) {
+AccountsApiHandler.prototype.auth = function (req, res, opts) {
   var self = this
+  if (!req.headers.authorization) return errorResponse(res, 401, 'Unauthorized')
 
-  if (!req.headers.authorization) return cb('Unauthorized')
+
 
   var rawCreds = req.headers.authorization.split(':')
-  var creds = { username: rawCreds[0], password: rawCreds[1] }
-  self.model.findOneBy('username', creds.username, function (err, account) {
-    if (err) {
-      errorResponse(res, 401, 'Error finding username: ' + err)
-      return cb(err, res)
-    }
-    if (!account) {
-      errorResponse(res, 401, 'Cannot find account with username: ' + creds.username)
-      return cb(new Error('Cannot find account with username: ' +
-        creds.username), res)
-    }
+  var creds = { id: rawCreds[0], password: rawCreds[1] }
+  self.model.findOne(creds.id, function (err, account) {
+    if (err) return errorResponse(res, 401, 'Error finding account: ' + err)
+    if (!account) return errorResponse(res, 401, 'Cannot find account with identifier: ' + creds.id)
+
     self.model.verify('basic', { key: account.key, password: creds.password },
       function (err, account) {
         if (err) return cb(err)
-        var payload = { key: account.key }
-        if (account.admin) payload.admin = true
-        var token = self.tokens.sign(req, payload)
+        if (account.admin) creds.admin = true
+        var token = self.tokens.sign(req, creds)
         response().json({ token: token }).pipe(res)
-        cb(err, res)
       })
   })
 }
