@@ -1,47 +1,25 @@
-//var Model = require('level-model')
-//var inherits = require('inherits')
-//var extend = require('extend')
-//
-//module.exports = Accounts
-//inherits(Accounts, Model)
-//
-//function Accounts (db, options) {
-//  if (!(this instanceof Accounts)) return new Accounts(db, options)
-//
-//  options = extend(options || {}, {
-//    modelName: 'profiles',
-//    properties: {
-//      username: { type: 'string' },
-//      email: { type: 'string' }
-//    },
-//    indexKeys: ['username', 'email'],
-//    required: ['username', 'email']
-//  })
-//
-//  Model.call(this, db, options)
-//}
-
 var sublevel = require('subleveldown')
+var extend = require('extend')
 
-module.exports = function (db) {
+module.exports = function (db, options) {
   function accountdownBasic (db, prefix) {
     return require('accountdown-basic')(db, prefix, { key: 'key' })
   }
 
-  var accountdown = require('accountdown')(sublevel(db, 'accounts'), {
-    login: { basic: accountdownBasic }
-  })
-
-  var accounts = require('accountdown-model')(accountdown, {
+  var options = extend({
     db: db,
     properties: {
-      username: { type: 'string' },
       email: { type: 'string' },
+      username: { type: ['string', 'null']},
       profile: { type: 'string' }
     },
-    required: ['username', 'email'],
-    indexKeys: ['username', 'email', 'profile']
-  })
+    required: ['email'],
+    indexKeys: ['email', 'username', 'profile']
+  }, options)
+
+  var login = extend(options.login, { basic: accountdownBasic })
+  var accountdown = require('accountdown')(sublevel(db, 'accounts'), { login: login })
+  var accounts = require('accountdown-model')(accountdown, options)
 
   return accounts
 }
