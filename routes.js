@@ -6,7 +6,7 @@ module.exports = function (handler, options) {
   router.on(prefix + '/accounts/:key', handler.item.bind(handler))
   router.on(prefix + '/auth', handler.auth.bind(handler))
   router.on(prefix + '/auth/:login', handler.authItem.bind(handler))
-  router.on(prefix + '/auth/:logout', handler.authItem.bind(handler))
+  router.on(prefix + '/auth/logout', handler.authItem.bind(handler))
 
   return router
 }

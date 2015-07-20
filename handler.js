@@ -5,8 +5,8 @@ var jsonBody = require('body/json')
 var through = require('through2')
 var filter = require('filter-object')
 
-var errorResponse = require('../../lib/error-response')
-var tokens = require('../../lib/tokens')
+var errorResponse = require('./lib/error-response')
+var tokens = require('./lib/tokens')
 
 module.exports = AccountsApiHandler
 
