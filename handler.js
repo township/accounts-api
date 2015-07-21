@@ -128,10 +128,10 @@ AccountsApiHandler.prototype.authBasic = function (req, res, opts) {
   if (!req.headers.authorization) return errorResponse(res, 401, 'Unauthorized')
 
   var rawCreds = req.headers.authorization.split(':')
-  var creds = { username: rawCreds[0], password: rawCreds[1] }
-  self.model.findOneBy('username', creds.username, function (err, account) {
-    if (err) return errorResponse(res, 401, 'Error finding username: ' + err)
-    if (!account) return errorResponse(res, 401, 'Cannot find account with username: ' + creds.username)
+  var creds = { id: rawCreds[0], password: rawCreds[1] }
+  self.model.findOne(creds.id, function (err, account) {
+    if (err) return errorResponse(res, 401, 'Error finding account: ' + err)
+    if (!account) return errorResponse(res, 401, 'Cannot find account with identifier: ' + creds.username)
 
     self.model.verify('basic', { key: account.key, password: creds.password },
       function (err, account) {
