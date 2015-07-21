@@ -2,6 +2,8 @@ var sublevel = require('subleveldown')
 var extend = require('extend')
 
 module.exports = function (db, options) {
+  options = options || {}
+
   function accountdownBasic (db, prefix) {
     return require('accountdown-basic')(db, prefix, { key: 'key' })
   }

@@ -34,8 +34,8 @@
   },
   "dependencies": {
     "JSONStream": "^1.0.4",
-    "accountdown": "^4.1.0",
-    "accountdown-basic": "^1.1.0",
+    "accountdown": "https://github.com/LukeSwart/accountdown/tarball/baa26ddbcd8396019ff45558e103b0b85e04bfea",
+    "accountdown-basic": "https://github.com/LukeSwart/accountdown-basic/tarball/e1da72179854f7140a35d66fbdbf8f4b63856fd5",
     "accountdown-model": "^1.0.0",
     "body": "^5.1.0",
     "cuid": "^1.2.5",

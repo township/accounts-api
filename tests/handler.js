@@ -6,10 +6,11 @@ var cuid = require('cuid')
 
 var levelup = require('levelup')
 var db = levelup('db', { db: require('memdown') })
-var accountsModel = require('../model')(db)
 
 var secret = 's3cr3t_Pa55w0rd'
-var accountsHandler = require('../handler')(accountsModel, { secret: secret })
+var auth = require('../lib/auth')(secret)
+var accountsModel = require('../model')(db)
+var accountsHandler = require('../handler')(accountsModel, { auth: auth })
 
 // Make a request to get the initial token
 var request = hammock.Request({
@@ -19,20 +20,23 @@ var request = hammock.Request({
   },
   url: '/somewhere'
 })
+
 request.end()
 var payload = { username: "joeblow", admin: true }
+var token = auth.tokens.sign(request, payload)
 
-var token = accountsHandler.tokens.sign(request, payload)
-
-
-test('verify sign in', function (t) {
+test('verify token', function (t) {
   var response = hammock.Response()
-  accountsHandler.verify(request, response)
-  t.end()
+  request.headers.authorization = 'Bearer ' + token
+  auth.verify(request, function (err, decoded) {
+    t.ifError(err)
+    t.ok(decoded)
+    t.end()
+  })
 })
 
 
-test('invalid sign in verification', function (t) {
+test('invalid token verification', function (t) {
   var request = hammock.Request({
     method: 'GET',
     headers: {
@@ -40,17 +44,15 @@ test('invalid sign in verification', function (t) {
     },
     url: '/somewhere'
   })
+
   // NO Token is set, so this auth should fail!
   request.end('thisbody')
 
-  var response = hammock.Response()
-
-  accountsHandler.index(request, response)
-  response.on('end', function (err, data) {
-    t.ifError(err)
-    t.true(401 === data.statusCode)
+  auth.verify(request, function (err, decoded) {
+    t.ok(err)
+    t.notOk(decoded)
     t.end()
-  });
+  })
 })
 
 test('get a list of accounts', function (t) {
@@ -63,15 +65,15 @@ test('get a list of accounts', function (t) {
       },
       url: '/somewhere'
     })
-    request.headers.Authorization = 'Bearer ' + token
+    request.headers.authorization = 'Bearer ' + token
     request.end('thisbody')
 
     var response = hammock.Response()
     accountsHandler.index(request, response) // without a callback, accounts is `undefined`
 
     response.on('end', function (err, data) {
-      t.ifError(err)
-      t.true(200 === data.statusCode)
+      t.ifError(err, 'there is no error')
+      t.true(200 === data.statusCode, 'statusCode is 200')
       var accounts = JSON.parse(data.body)
       // remove the emails, which have been stripped from the response's accounts
       for (var i = 0; i < expectedAccounts.length; i++) {
@@ -102,7 +104,7 @@ test('auth sign in to existing account', function (t) {
   request.end('thisbody')
 
   var response = hammock.Response()
-  accountsHandler.auth(request, response)
+  accountsHandler.authBasic(request, response)
 
   response.on('end', function (err, data) {
     t.ifError(err)
@@ -129,7 +131,7 @@ test('invalid auth sign in', function (t) {
   request.end('thisbody')
 
   var response = hammock.Response()
-  accountsHandler.auth(request, response)
+  accountsHandler.authBasic(request, response)
 
   response.on('end', function (err, data) {
     t.ifError(err)
@@ -138,19 +140,20 @@ test('invalid auth sign in', function (t) {
   })
 })
 
+/*
+// temporarily commenting this out in preparation for permissions that will replace admin property
 test('delete a single account as non-admin', function (t) {
-  request = hammock.Request({
+  var request = hammock.Request({
     method: 'GET',
     headers: {
       'content-type': 'application/json'
     },
     url: '/somewhere'
   })
+
   request.end()
-  res = hammock.Response()
-  payload = { username: "joeblow" }
-  var nonAdminToken = accountsHandler.tokens.sign(request, payload)
-  res.end()
+  var payload = { username: "joeblow" }
+  var nonAdminToken = auth.tokens.sign(request, payload)
 
   var accountsFixture = JSON.parse(JSON.stringify(require('./fixtures/accounts.js')))
   var accountToDelete = accountsFixture[0].login.basic
@@ -161,7 +164,7 @@ test('delete a single account as non-admin', function (t) {
     },
     url: '/somewhere'
   })
-  request.headers.Authorization = 'Bearer ' + nonAdminToken // 'token' is a jwt with login creds
+  request.headers.authorization = 'Bearer ' + nonAdminToken // 'token' is a jwt with login creds
   request.end('thisbody')
 
   var response = hammock.Response()
@@ -173,8 +176,9 @@ test('delete a single account as non-admin', function (t) {
     t.end()
   })
 })
+*/
 
-test('delete a single account', function (t) {
+test('DELETE an account', function (t) {
   var accountsFixture = JSON.parse(JSON.stringify(require('./fixtures/accounts.js')))
   var accountToDelete = accountsFixture[0].login.basic
   var request = hammock.Request({
@@ -184,7 +188,7 @@ test('delete a single account', function (t) {
     },
     url: '/somewhere'
   })
-  request.headers.Authorization = 'Bearer ' + token // 'token' is a jwt with login creds
+  request.headers.authorization = 'Bearer ' + token // 'token' is a jwt with login creds
   request.end('thisbody')
 
   var response = hammock.Response()
@@ -198,7 +202,7 @@ test('delete a single account', function (t) {
 })
 
 var testAccount
-test('POST a single account', function (t) {
+test('POST an account', function (t) {
   testAccount = { key: cuid(), username: "yup", email: "ok@joeblow.com", password: "poop"}
   var request = hammock.Request({
     method: 'POST',
@@ -207,7 +211,7 @@ test('POST a single account', function (t) {
     },
     url: '/somewhere'
   })
-  request.headers.Authorization = 'Bearer ' + token // 'token' is a jwt with login creds
+  request.headers.authorization = 'Bearer ' + token // 'token' is a jwt with login creds
   request.end(JSON.stringify(testAccount))
 
   var response = hammock.Response()
@@ -222,7 +226,6 @@ test('POST a single account', function (t) {
 
 // GET the account we just created in POST
 test('GET an account', function (t) {
-  //var testAccount = { key: cuid(), username: "yup", email: "ok@joeblow.com", password: "poop"}
   var request = hammock.Request({
     method: 'GET',
     headers: {
@@ -230,7 +233,7 @@ test('GET an account', function (t) {
     },
     url: '/somewhere'
   })
-  request.headers.Authorization = 'Bearer ' + token // 'token' is a jwt with login creds
+  request.headers.authorization = 'Bearer ' + token // 'token' is a jwt with login creds
   request.end(JSON.stringify(testAccount))
 
   var response = hammock.Response()
@@ -256,7 +259,7 @@ test('PUT an account', function (t) {
     },
     url: '/somewhere'
   })
-  request.headers.Authorization = 'Bearer ' + token // 'token' is a jwt with login creds
+  request.headers.authorization = 'Bearer ' + token // 'token' is a jwt with login creds
   request.end(JSON.stringify(putAccount))
 
   var response = hammock.Response()
