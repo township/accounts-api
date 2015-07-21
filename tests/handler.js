@@ -31,6 +31,7 @@ test('verify sign in', function (t) {
   t.end()
 })
 
+
 test('invalid sign in verification', function (t) {
   var request = hammock.Request({
     method: 'GET',
@@ -86,6 +87,7 @@ test('get a list of accounts', function (t) {
 test('auth sign in to existing account', function (t) {
   var accountsFixture = JSON.parse(JSON.stringify(require('./fixtures/accounts.js')))
   var accountToAuth = accountsFixture[0]
+
   var creds = { username: accountToAuth.value.username,
     password: accountToAuth.login.basic.passowrd }
   var request = hammock.Request({
@@ -96,22 +98,20 @@ test('auth sign in to existing account', function (t) {
     },
     url: '/somewhere'
   })
-  //console.log("request:", request)
+
   request.end('thisbody')
 
   var response = hammock.Response()
-  accountsHandler.auth(request, response, function (err, response) {
-    t.ifError(err)
+  accountsHandler.auth(request, response)
 
-    response.on('end', function (err, data) {
-      t.ifError(err)
-      t.true(200 === data.statusCode)
-      // TODO: Check that we have the right auth token
-      // TODO: data.body cannot be properly compared due to bug in npm's hammock
-      // that causes the body to be repeated twice when it is piped into the response:
-      // https://github.com/tommymessbauer/hammock/issues/15
-      t.end()
-    });
+  response.on('end', function (err, data) {
+    t.ifError(err)
+    t.true(200 === data.statusCode)
+    // TODO: Check that we have the right auth token
+    // TODO: data.body cannot be properly compared due to bug in npm's hammock
+    // that causes the body to be repeated twice when it is piped into the response:
+    // https://github.com/tommymessbauer/hammock/issues/15
+    t.end()
   })
 })
 
@@ -129,13 +129,12 @@ test('invalid auth sign in', function (t) {
   request.end('thisbody')
 
   var response = hammock.Response()
-  accountsHandler.auth(request, response, function (err, response) {
-    t.ok(err)
-    response.on('end', function (err, data) {
-      t.ifError(err)
-      t.true(401 === data.statusCode)
-      t.end()
-    });
+  accountsHandler.auth(request, response)
+
+  response.on('end', function (err, data) {
+    t.ifError(err)
+    t.true(401 === data.statusCode)
+    t.end()
   })
 })
 
