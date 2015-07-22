@@ -156,7 +156,10 @@ AccountsApiHandler.prototype.authBasic = function (req, res, opts) {
         var payload = { key: account.key }
         if (account.admin) payload.admin = true
         var token = self.auth.tokens.sign(req, payload)
-        response().json({ token: token }).pipe(res)
+        self.auth.login(req, res, account, function (err, data) {
+          if (err) return errorResponse(res, 500, err)
+          return response().status(200).json({ token: token }).pipe(res)
+        })
       })
   })
 }
