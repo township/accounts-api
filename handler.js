@@ -13,7 +13,9 @@ module.exports = AccountsApiHandler
 function AccountsApiHandler (accounts, options) {
   if (!(this instanceof AccountsApiHandler)) return new AccountsApiHandler(accounts, options)
   this.model = accounts
-  this.auth = options.auth
+
+  var secret = 's3cr3t_Pa55w0rd'
+  this.auth = options.auth || require('./lib/auth')(secret)
 }
 
 /*
@@ -24,7 +26,12 @@ AccountsApiHandler.prototype.index = function (req, res) {
   var self = this
 
   this.auth.verify(req, function (err, decoded) {
-    var unauthorized = (err || !decoded)
+    // TODO: We are not using 'unauthorized' here b/c we are allowing anyone
+    // to create an account (this should probably change)
+    //var unauthorized = (err || !decoded)
+    var noCredsProvided = !!decoded
+    if (err) return errorResponse(res, 401, err)
+    var isAdmin = decoded && decoded.admin
 
     /*
      *  Get list of accounts
@@ -41,11 +48,13 @@ AccountsApiHandler.prototype.index = function (req, res) {
      *  Create a new account
      */
     else if (req.method === 'POST') {
-      if (unauthorized) return errorResponse(res, 401, 'Unauthorized')
-
       jsonBody(req, res, function (err, body) {
         if (err) return errorResponse(res, 500, err)
 
+        if (!isAdmin && body.admin) {
+          return errorResponse(res, 400,
+            'You do not have privileges to create an admin account')
+        }
         var opts = {
           login: { basic: { key: body.key, password: body.password } },
           value: filter(body, '!password')
@@ -53,7 +62,15 @@ AccountsApiHandler.prototype.index = function (req, res) {
 
         self.model.create(body.key, opts, function (err, account) {
           if (err) return errorResponse(res, 500, 'Unable to create new user' + err)
-          return response().status(200).json(account).pipe(res)
+          if (noCredsProvided) {
+            self.auth.login(req, res, account, function (err, data) {
+              if (err) return errorResponse(res, 500, err)
+              return response().status(200).json(account).pipe(res)
+            })
+          } else {
+            return response().status(200).json(account).pipe(res)
+          }
+
         })
       })
     }

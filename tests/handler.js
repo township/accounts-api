@@ -36,7 +36,7 @@ test('verify token', function (t) {
 })
 
 
-test('invalid token verification', function (t) {
+test('no auth', function (t) {
   var request = hammock.Request({
     method: 'GET',
     headers: {
@@ -45,11 +45,12 @@ test('invalid token verification', function (t) {
     url: '/somewhere'
   })
 
-  // NO Token is set, so this auth should fail!
+  // NO token or credentials are provided, so this auth should
+  // give us null for 'decoded' (note: we may change this later)
   request.end('thisbody')
 
   auth.verify(request, function (err, decoded) {
-    t.ok(err)
+    t.notOk(err)
     t.notOk(decoded)
     t.end()
   })
