@@ -169,7 +169,7 @@ AccountsApiHandler.prototype.authItem = function (req, res, opts) {
 
 function filterAccountDetails () {
   return through.obj(function iterator(chunk, enc, next) {
-    this.push(filter(chunk, ['*', '!email', '!admin']))
+    this.push(filter(chunk, ['*', '!email', '!roles', '!scopes']))
     next()
   })
 }

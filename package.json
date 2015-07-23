@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/LukeSwart/accounts-api",
   "devDependencies": {
+    "clone": "^1.0.2",
     "hammock": "^1.0.2",
     "memdb": "^1.0.1",
     "memdown": "^1.0.0",
@@ -36,7 +37,7 @@
     "JSONStream": "^1.0.4",
     "accountdown": "https://github.com/LukeSwart/accountdown/tarball/baa26ddbcd8396019ff45558e103b0b85e04bfea",
     "accountdown-basic": "https://github.com/LukeSwart/accountdown-basic/tarball/e1da72179854f7140a35d66fbdbf8f4b63856fd5",
-    "accountdown-model": "^1.1.0",
+    "accountdown-model": "^1.1.1",
     "body": "^5.1.0",
     "cookie-cutter": "^0.1.1",
     "cuid": "^1.2.5",
