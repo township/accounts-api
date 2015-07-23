@@ -13,7 +13,15 @@ module.exports = function (db, options) {
     properties: {
       email: { type: 'string' },
       username: { type: ['string', 'null']},
-      profile: { type: 'string' }
+      profile: { type: 'string' },
+      roles: { 
+        type: 'object',
+        properties: {
+          admin: { type: ['boolean', 'null'] },
+          owner: { type: 'array', items: { type: 'string' } },
+          collaborator: { type: 'array', items: { type: 'string' } }
+        }
+      }
     },
     required: ['email'],
     indexKeys: ['email', 'username', 'profile']

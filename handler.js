@@ -30,7 +30,7 @@ AccountsApiHandler.prototype.index = function (req, res) {
     // to create an account (this should probably change)
     //var unauthorized = (err || !decoded)
     var noCredsProvided = !!decoded
-    if (err) return errorResponse(res, 401, err)
+    //if (err) return errorResponse(res, 401, err)
     var isAdmin = decoded && decoded.admin
 
     /*
@@ -51,10 +51,6 @@ AccountsApiHandler.prototype.index = function (req, res) {
       jsonBody(req, res, function (err, body) {
         if (err) return errorResponse(res, 500, err)
 
-        if (!isAdmin && body.admin) {
-          return errorResponse(res, 400,
-            'You do not have privileges to create an admin account')
-        }
         var opts = {
           login: { basic: { key: body.key, password: body.password } },
           value: filter(body, '!password')
@@ -146,21 +142,19 @@ AccountsApiHandler.prototype.authBasic = function (req, res, opts) {
 
   var rawCreds = req.headers.authorization.split(':')
   var creds = { id: rawCreds[0], password: rawCreds[1] }
+
   self.model.findOne(creds.id, function (err, account) {
     if (err) return errorResponse(res, 401, 'Error finding account: ' + err)
-    if (!account) return errorResponse(res, 401, 'Cannot find account with identifier: ' + creds.username)
+    if (!account) return errorResponse(res, 401, 'Cannot find account with identifier: ' + creds.id)
+    var verifyOptions = { key: account.key, password: creds.password }
 
-    self.model.verify('basic', { key: account.key, password: creds.password },
-      function (err, account) {
-        if (err) return cb(err)
-        var payload = { key: account.key }
-        if (account.admin) payload.admin = true
-        var token = self.auth.tokens.sign(req, payload)
-        self.auth.login(req, res, account, function (err, data) {
-          if (err) return errorResponse(res, 500, err)
-          return response().status(200).json({ token: token }).pipe(res)
-        })
+    self.model.verify('basic', verifyOptions, function (err, ok, key) {
+      if (err) return cb(err)
+      self.auth.login(req, res, account, function (err, token) {
+        if (err) return errorResponse(res, 500, err)
+        return response().status(200).json({ token: token }).pipe(res)
       })
+    })
   })
 }
 
