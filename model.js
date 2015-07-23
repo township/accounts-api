@@ -8,26 +8,40 @@ module.exports = function (db, options) {
     return require('accountdown-basic')(db, prefix, { key: 'key' })
   }
 
-  var options = extend({
-    db: db,
-    properties: {
-      email: { type: 'string' },
-      username: { type: ['string', 'null']},
-      profile: { type: 'string' },
-      roles: { 
+  options.roles = { 
+    type: 'object',
+    properties: extend({
+      admin: { type: ['boolean', 'null'] },
+      owner: { type: 'array', items: { type: 'string' } },
+      collaborator: { type: 'array', items: { type: 'string' } }
+    }, options.roles),
+    default: {}
+  }
+
+  options.scopes = {
+    type: 'object',
+    properties: extend({
+      accounts: {
         type: 'object',
         properties: {
-          admin: { type: ['boolean', 'null'] },
-          owner: { type: 'array', items: { type: 'string' } },
-          collaborator: { type: 'array', items: { type: 'string' } }
-        }
+          type: 'array',
+          items: { type: 'string', enum: ['create', 'read', 'update', 'delete'] },
+        },
+        default: { actions: ['read'] }
       }
-    },
+    }, options.scopes)
+  }
+
+  var options = extend({
+    db: db,
+    email: { type: 'string' },
+    username: { type: ['string', 'null']},
     required: ['email'],
-    indexKeys: ['email', 'username', 'profile']
+    indexKeys: ['email', 'username', 'profile'],
+    login: {}
   }, options)
 
-  var login = extend(options.login, { basic: accountdownBasic })
+  var login = options.login = extend(options.login, { basic: accountdownBasic })
   var accountdown = require('accountdown')(sublevel(db, 'accounts'), { login: login })
   var accounts = require('accountdown-model')(accountdown, options)
 

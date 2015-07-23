@@ -31,6 +31,26 @@ var server = http.createServer(function (req, res) {
 server.listen(4444)
 ```
 
+## Account roles
+
+By default, there are three roles an account can have: admin, owner, collaborator
+
+- `admin` 
+  - is a boolean, and gives site-wide access
+  - implies create, read, update, and delete scopes for all models
+- `owner` 
+  - is an array of keys for models that the account has created or for which the account has been granted owner status
+  - implies create, read, update, and delete scopes on all models the account is an owner
+- `collaborator` 
+  - is an array of keys for models for which the account has been granted collaborator status
+  - implies create, read, and update scopes on all models the account is a collaborator
+
+## Account scopes
+
+Scopes are granular permissions for models or other arbitrary actions in your application.
+
+
+
 ## Todo
 
 - decide how to handle static assets, and how they might be handled across the application
