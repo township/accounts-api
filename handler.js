@@ -152,7 +152,7 @@ AccountsApiHandler.prototype.authBasic = function (req, res, opts) {
       if (err) return cb(err)
       self.auth.login(req, res, account, function (err, token) {
         if (err) return errorResponse(res, 500, err)
-        return response().status(200).json({ token: token }).pipe(res)
+        return response().status(200).json({ token: token, key: account.key }).pipe(res)
       })
     })
   })
@@ -161,6 +161,12 @@ AccountsApiHandler.prototype.authBasic = function (req, res, opts) {
 AccountsApiHandler.prototype.authItem = function (req, res, opts) {
   var login = opts.params.login // ie 'twitter', 'facebook', etc
   // TODO: Finish this
+}
+
+AccountsApiHandler.prototype.logout = function (req, res, opts) {
+  this.auth.logout(res)
+  res.writeHead(302, { 'Location': '/' })
+  return res.end()
 }
 
 /*
