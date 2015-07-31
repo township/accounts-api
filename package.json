@@ -1,6 +1,6 @@
 {
   "name": "accounts-api",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "An accounts api that follows a few contraints to try and make it easy to plug into a node http server",
   "main": "index.js",
   "directories": {
