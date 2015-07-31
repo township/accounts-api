@@ -26,13 +26,6 @@ AccountsApiHandler.prototype.index = function (req, res) {
   var self = this
 
   this.auth.verify(req, function (err, decoded) {
-    // TODO: We are not using 'unauthorized' here b/c we are allowing anyone
-    // to create an account (this should probably change)
-    //var unauthorized = (err || !decoded)
-    var noCredsProvided = !!decoded
-    //if (err) return errorResponse(res, 401, err)
-    var isAdmin = decoded && decoded.admin
-
     /*
      *  Get list of accounts
      */
@@ -58,15 +51,10 @@ AccountsApiHandler.prototype.index = function (req, res) {
 
         self.model.create(body.key, opts, function (err, account) {
           if (err) return errorResponse(res, 500, 'Unable to create new user' + err)
-          if (noCredsProvided) {
-            self.auth.login(req, res, account, function (err, data) {
-              if (err) return errorResponse(res, 500, err)
-              return response().status(200).json(account).pipe(res)
-            })
-          } else {
+          self.auth.login(req, res, account, function (err, data) {
+            if (err) return errorResponse(res, 500, err)
             return response().status(200).json(account).pipe(res)
-          }
-
+          })
         })
       })
     }
