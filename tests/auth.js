@@ -94,7 +94,7 @@ test('create accounts model with custom scope', function (t) {
 })
 
 test('init accounts-api with custom scope', function (t) {
-  var createAccounts = require('../index')({
+  var createAccounts = require('../index')(memdb(), {
     secret: 'test',
     scopes: {
       posts: {
@@ -110,7 +110,7 @@ test('init accounts-api with custom scope', function (t) {
     }
   })
 
-  var accounts = createAccounts({ db: memdb() })
+  var accounts = createAccounts()
 
   var data = { 
     login: { basic: { key: 'o4no34inro34int', password: 'poop' } },
