@@ -4,6 +4,7 @@ module.exports = function (options) {
   options = options || {}
 
   return function (server) {
+    if (!server.db) throw new ReferenceError("db is undefined")
     var secret = options.secret
     delete options.secret
 
