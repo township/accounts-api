@@ -49,7 +49,7 @@
     "levelup": "^1.2.1",
     "match-routes": "^2.0.0",
     "response": "git://github.com/mikeal/response",
-    "subleveldown": "^2.0.0",
+    "subleveldown": "^2.1.0",
     "through2": "^2.0.0"
   }
 }
