@@ -8,7 +8,7 @@ var accounts = require('../model')(db)
 test('create an account', function (t) {
   var data = {
     login: { basic: { key: cuid(), password: 'test' } },
-    value: { username: 'jane', email: 'jane@example.com'}
+    value: { username: 'jane', email: 'jane@example.com' }
   }
 
   accounts.create(data, function (err, account) {

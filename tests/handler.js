@@ -1,12 +1,9 @@
 var test = require('tape')
 var each = require('each-async')
 var hammock = require('hammock')
-var isEqual = require('is-equal')
 var clone = require('clone')
 var cuid = require('cuid')
-
-var levelup = require('levelup')
-var db = levelup('db', { db: require('memdown') })
+var db = require('memdb')()
 
 var secret = 's3cr3t_Pa55w0rd'
 var auth = require('../lib/auth')(secret)
@@ -23,11 +20,10 @@ var request = hammock.Request({
 })
 
 request.end()
-var payload = { username: "joeblow", admin: true }
+var payload = { username: 'joeblow', admin: true }
 var token = auth.tokens.sign(request, payload)
 
 test('verify token', function (t) {
-  var response = hammock.Response()
   request.headers.authorization = 'Bearer ' + token
   auth.verify(request, function (err, decoded) {
     t.ifError(err)
@@ -35,7 +31,6 @@ test('verify token', function (t) {
     t.end()
   })
 })
-
 
 test('no auth', function (t) {
   var request = hammock.Request({
@@ -59,7 +54,7 @@ test('no auth', function (t) {
 
 test('get a list of accounts', function (t) {
   var accountsFixture = require('./fixtures/accounts.js')
-  createAccounts(t, accountsFixture, function(expectedAccounts) {
+  createAccounts(t, accountsFixture, function (expectedAccounts) {
     var request = hammock.Request({
       method: 'GET',
       headers: {
@@ -75,8 +70,9 @@ test('get a list of accounts', function (t) {
 
     response.on('end', function (err, data) {
       t.ifError(err, 'there is no error')
-      t.true(200 === data.statusCode, 'statusCode is 200')
+      t.true(data.statusCode === 200, 'statusCode is 200')
       var accounts = JSON.parse(data.body)
+
       // remove the emails, roles, and scopes, which have been stripped from the response's accounts
       for (var i = 0; i < expectedAccounts.length; i++) {
         delete expectedAccounts[i].email
@@ -85,9 +81,9 @@ test('get a list of accounts', function (t) {
       }
 
       t.equal(accounts.length, expectedAccounts.length)
-      //t.ok(isEqual(accounts, expectedAccounts))
+      // t.ok(isEqual(accounts, expectedAccounts))
       t.end()
-    });
+    })
   })
 })
 
@@ -101,7 +97,7 @@ test('auth sign in to existing account', function (t) {
     method: 'GET',
     headers: {
       'content-type': 'application/json',
-      'authorization': '' + creds.username + ":" + creds.password
+      'authorization': '' + creds.username + ':' + creds.password
     },
     url: '/somewhere'
   })
@@ -113,7 +109,7 @@ test('auth sign in to existing account', function (t) {
 
   response.on('end', function (err, data) {
     t.ifError(err)
-    t.true(200 === data.statusCode)
+    t.true(data.statusCode === 200)
     // TODO: Check that we have the right auth token
     // TODO: data.body cannot be properly compared due to bug in npm's hammock
     // that causes the body to be repeated twice when it is piped into the response:
@@ -123,8 +119,8 @@ test('auth sign in to existing account', function (t) {
 })
 
 test('invalid auth sign in', function (t) {
-  //var creds = { username: accountToAuth.value.username,
-  //  password: accountToAuth.login.basic.passowrd }
+  // var creds = { username: accountToAuth.value.username,
+  // password: accountToAuth.login.basic.passowrd }
   var request = hammock.Request({
     method: 'GET',
     headers: {
@@ -140,7 +136,7 @@ test('invalid auth sign in', function (t) {
 
   response.on('end', function (err, data) {
     t.ifError(err)
-    t.true(401 === data.statusCode)
+    t.true(data.statusCode === 401)
     t.end()
   })
 })
@@ -197,18 +193,18 @@ test('DELETE an account', function (t) {
   request.end('thisbody')
 
   var response = hammock.Response()
-  accountsHandler.item(request, response, { params: {key: accountToDelete.key }})
+  accountsHandler.item(request, response, { params: { key: accountToDelete.key } })
 
   response.on('end', function (err, data) {
     t.ifError(err)
-    t.true(200 === data.statusCode)
+    t.true(data.statusCode === 200)
     t.end()
   })
 })
 
 var testAccount
 test('POST an account', function (t) {
-  testAccount = { key: cuid(), username: "yup", email: "ok@joeblow.com", password: "poop"}
+  testAccount = { key: cuid(), username: 'yup', email: 'ok@joeblow.com', password: 'poop' }
   var request = hammock.Request({
     method: 'POST',
     headers: {
@@ -220,11 +216,11 @@ test('POST an account', function (t) {
   request.end(JSON.stringify(testAccount))
 
   var response = hammock.Response()
-  accountsHandler.index(request, response, { params: {key: testAccount.key }})
+  accountsHandler.index(request, response, { params: { key: testAccount.key } })
 
   response.on('end', function (err, data) {
     t.ifError(err)
-    t.true(200 === data.statusCode)
+    t.true(data.statusCode === 200)
     t.end()
   })
 })
@@ -242,11 +238,11 @@ test('GET an account', function (t) {
   request.end(JSON.stringify(testAccount))
 
   var response = hammock.Response()
-  accountsHandler.item(request, response, { params: {key: testAccount.key }})
+  accountsHandler.item(request, response, { params: { key: testAccount.key } })
 
   response.on('end', function (err, data) {
     t.ifError(err)
-    t.true(200 === data.statusCode)
+    t.true(data.statusCode === 200)
     // TODO: data.body cannot be properly compared due to bug in npm's hammock
     // that causes the body to be repeated twice when it is piped into the response:
     // https://github.com/tommymessbauer/hammock/issues/15
@@ -256,7 +252,7 @@ test('GET an account', function (t) {
 
 // PUT the account we just created in POST
 test('PUT an account', function (t) {
-  var putAccount = { username: "yup2", email: "ok2@joeblow.com"}
+  var putAccount = { username: 'yup2', email: 'ok2@joeblow.com' }
   var request = hammock.Request({
     method: 'PUT',
     headers: {
@@ -268,11 +264,11 @@ test('PUT an account', function (t) {
   request.end(JSON.stringify(putAccount))
 
   var response = hammock.Response()
-  accountsHandler.item(request, response, { params: {key: testAccount.key }})
+  accountsHandler.item(request, response, { params: { key: testAccount.key } })
 
   response.on('end', function (err, data) {
     t.ifError(err)
-    t.true(200 === data.statusCode)
+    t.true(data.statusCode === 200)
     // TODO: data.body cannot be properly compared due to bug in npm's hammock
     // that causes the body to be repeated twice when it is piped into the response:
     // https://github.com/tommymessbauer/hammock/issues/15
@@ -280,11 +276,11 @@ test('PUT an account', function (t) {
   })
 })
 
-function createAccounts(t, accountsData, cb) {
+function createAccounts (t, accountsData, cb) {
   each(accountsData, iterator, end)
   var expectedAccounts = []
 
-  function iterator(account, i, done) {
+  function iterator (account, i, done) {
     accountsModel.create(account, function (err, created) {
       expectedAccounts.push(created)
       t.notOk(err)
@@ -293,25 +289,7 @@ function createAccounts(t, accountsData, cb) {
     })
   }
 
-  function end() {
+  function end () {
     cb(clone(expectedAccounts))
-  }
-}
-
-function deleteAccounts(t, accountsData) {
-  each(accountsData, iterator, end)
-
-  function iterator(account, i, done) {
-
-    accountsModel.findOne(account.value.username, function (err, accountValue) {
-      t.notOk(err)
-      t.ok(accountValue)
-      accountsModel.delete(accountValue.key, function (err, accountValue) {
-        done()
-      })
-    })
-  }
-
-  function end() {
   }
 }

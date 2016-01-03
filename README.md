@@ -14,16 +14,15 @@ To use it, you'd include it in the server like this:
 ```
 var http = require('http')
 var response = require('response')
-var levelup = require('levelup')
-var db = levelup('db', { db: require('memdown') })
+var level = require('level')
+var db = level('db')
+var accounts = require('accounts-api')(db)
 
 var server = http.createServer(function (req, res) {
   /* 
   * if req.url matches a route, it will return, 
   * otherwise, another part of the application can respond 
   */
-  this.db = db
-  var accounts = requires('accounts-api')(this)
   if (accounts.serve(req, res)) return
   response().json({ message: 'hi' }).pipe(res)
 })

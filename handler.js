@@ -6,15 +6,13 @@ var through = require('through2')
 var filter = require('filter-object')
 
 var errorResponse = require('./lib/error-response')
-var tokens = require('./lib/tokens')
 
 module.exports = AccountsApiHandler
 
 function AccountsApiHandler (accounts, options) {
   if (!(this instanceof AccountsApiHandler)) return new AccountsApiHandler(accounts, options)
   this.model = accounts
-
-  var secret = 's3cr3t_Pa55w0rd'
+  var secret = options.secret || 's3cr3t_Pa55w0rd'
   this.auth = options.auth || require('./lib/auth')(secret)
 }
 
@@ -22,25 +20,18 @@ function AccountsApiHandler (accounts, options) {
  * GET: return all accounts
  * POST: create a new account (admins only)
  */
-AccountsApiHandler.prototype.index = function (req, res) {
+AccountsApiHandler.prototype.index = function (req, res, opts) {
   var self = this
 
   this.auth.verify(req, function (err, decoded) {
-    /*
-     *  Get list of accounts
-     */
+    if (err) return errorResponse(res, 500, err)
 
     if (req.method === 'GET') {
       return self.model.createReadStream({keys: false})
         .pipe(filterAccountDetails())
         .pipe(JSONStream.stringify())
         .pipe(res)
-    }
-
-    /*
-     *  Create a new account
-     */
-    else if (req.method === 'POST') {
+    } else if (req.method === 'POST') {
       jsonBody(req, res, function (err, body) {
         if (err) return errorResponse(res, 500, err)
 
@@ -52,6 +43,7 @@ AccountsApiHandler.prototype.index = function (req, res) {
         self.model.create(body.key, opts, function (err, account) {
           if (err) return errorResponse(res, 500, 'Unable to create new user' + err)
           self.auth.login(req, res, account, function (err, data) {
+            console.log(err)
             if (err) return errorResponse(res, 500, err)
             return response().status(200).json(account).pipe(res)
           })
@@ -59,7 +51,7 @@ AccountsApiHandler.prototype.index = function (req, res) {
       })
     }
 
-    else return errorResponse(res, 405, 'request method not recognized: ' + req.method )
+    else return errorResponse(res, 405, 'request method not recognized: ' + req.method)
   })
 }
 
@@ -81,45 +73,34 @@ AccountsApiHandler.prototype.item = function (req, res, opts) {
     if (req.method === 'GET') {
       self.model.get(opts.params.key, function (err, account) {
         if (err) return errorResponse(res, 500, 'Could not retrieve the account')
-        if (!decoded.admin) account = filter(account, ['*', '!email', '!admin'])
+        if (!decoded || !decoded.admin) account = filter(account, ['*', '!email', '!admin', '!roles', '!scopes'])
         return response().status(200).json(account).pipe(res)
       })
-    }
-
-    /*
-     *  Update an account
-     */
-
-    else if (req.method === 'PUT') {
+    } else if (req.method === 'PUT') {
       if (unauthorized) return errorResponse(res, 401, 'Unauthorized')
 
-      jsonBody(req, res, opts, function (err, body) {
-        if (err) return errorResponse(res, 500, 'Could not parse the request\'s body' )
-        self.model.get(opts.params.key, function (err, account){
-          if (err) return errorResponse(res, 500, 'Could not retrieve account:' + err )
+      jsonBody(req, res, function (err, body) {
+        if (err) return errorResponse(res, 500, 'Could not parse the request body')
+
+        self.model.get(opts.params.key, function (err, account) {
+          if (err) return errorResponse(res, 500, 'Could not retrieve account:' + err)
           account = extend(account, body)
           self.model.put(opts.params.key, account, function (err) {
-            if (err) return errorResponse(res, 500, 'Server error' )
+            if (err) return errorResponse(res, 500, 'Server error')
             response().status(200).json(account).pipe(res)
           })
         })
       })
-    }
-
-    /*
-     *  Delete an account
-     */
-
-    else if (req.method === 'DELETE') {
+    } else if (req.method === 'DELETE') {
       if (unauthorized) return errorResponse(res, 401, 'Unauthorized')
 
       self.model.remove(opts.params.key, function (err) {
-        if (err) return errorResponse(res, 500, 'Key does not exist' )
+        if (err) return errorResponse(res, 500, 'Key does not exist')
         return response().json(opts.params).pipe(res)
       })
     }
 
-    else return errorResponse(res, 405, 'request method not recognized: ' + req.method )
+    else return errorResponse(res, 405, 'request method not recognized: ' + req.method)
   })
 }
 
@@ -137,7 +118,7 @@ AccountsApiHandler.prototype.authBasic = function (req, res, opts) {
     var verifyOptions = { key: account.key, password: creds.password }
 
     self.model.verify('basic', verifyOptions, function (err, ok, key) {
-      if (err) return cb(err)
+      if (err) return errorResponse(res, 500, err)
       self.auth.login(req, res, account, function (err, token) {
         if (err) return errorResponse(res, 500, err)
         return response().status(200).json({ token: token, key: account.key }).pipe(res)
@@ -147,8 +128,8 @@ AccountsApiHandler.prototype.authBasic = function (req, res, opts) {
 }
 
 AccountsApiHandler.prototype.authItem = function (req, res, opts) {
-  var login = opts.params.login // ie 'twitter', 'facebook', etc
   // TODO: Finish this
+  // var login = opts.params.login
 }
 
 AccountsApiHandler.prototype.logout = function (req, res, opts) {
@@ -160,12 +141,9 @@ AccountsApiHandler.prototype.logout = function (req, res, opts) {
 /*
  * Helper functions
  */
-
 function filterAccountDetails () {
-  return through.obj(function iterator(chunk, enc, next) {
+  return through.obj(function iterator (chunk, enc, next) {
     this.push(filter(chunk, ['*', '!email', '!roles', '!scopes']))
     next()
   })
 }
-
-

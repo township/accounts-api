@@ -1,13 +1,16 @@
 {
   "name": "accounts-api",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "An accounts api that follows a few contraints to try and make it easy to plug into a node http server",
   "main": "index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "tape tests/*.js | tap-spec"
+    "test": "standard && tape tests/*.js | tap-spec"
+  },
+  "browser": {
+    "request": "xhr"
   },
   "repository": {
     "type": "git",
@@ -27,29 +30,29 @@
   "homepage": "https://github.com/LukeSwart/accounts-api",
   "devDependencies": {
     "clone": "^1.0.2",
-    "hammock": "^1.0.2",
-    "memdb": "^1.0.1",
-    "memdown": "^1.0.0",
-    "tap-spec": "^4.0.2",
-    "tape": "^4.0.0"
+    "each-async": "^1.1.1",
+    "hammock": "^1.1.0",
+    "memdb": "^1.3.1",
+    "standard": "^5.4.1",
+    "tap-spec": "^4.1.1",
+    "tape": "^4.4.0"
   },
   "dependencies": {
-    "JSONStream": "^1.0.4",
+    "JSONStream": "^1.0.7",
     "accountdown": "https://github.com/LukeSwart/accountdown/tarball/baa26ddbcd8396019ff45558e103b0b85e04bfea",
     "accountdown-basic": "https://github.com/LukeSwart/accountdown-basic/tarball/e1da72179854f7140a35d66fbdbf8f4b63856fd5",
     "accountdown-model": "^1.1.1",
     "body": "^5.1.0",
     "cookie-cutter": "^0.1.1",
-    "cuid": "^1.2.5",
-    "each-async": "^1.1.1",
+    "cuid": "^1.3.8",
     "extend": "^3.0.0",
-    "filter-object": "^1.1.2",
-    "is-equal": "^1.2.3",
-    "jsonwebtoken": "^5.0.2",
-    "levelup": "^1.2.1",
+    "filter-object": "^2.1.0",
+    "jsonwebtoken": "^5.5.0",
     "match-routes": "^2.0.0",
-    "response": "git://github.com/mikeal/response",
+    "request": "^2.67.0",
+    "response": "^0.18.0",
     "subleveldown": "^2.1.0",
-    "through2": "^2.0.0"
+    "through2": "^2.0.0",
+    "xhr": "^2.2.0"
   }
 }

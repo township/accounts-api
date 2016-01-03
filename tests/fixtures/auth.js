@@ -59,7 +59,7 @@ module.exports = {
     },
     {
       title: 'public object',
-      key: 'publickey',
+      key: 'publickey'
     }
   ]
 }
