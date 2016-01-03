@@ -8,7 +8,7 @@ module.exports = function (db, options) {
     return require('accountdown-basic')(db, prefix, { key: 'key' })
   }
 
-  options.roles = { 
+  options.roles = {
     type: 'object',
     properties: extend({
       admin: { type: ['boolean', 'null'] },
@@ -25,17 +25,17 @@ module.exports = function (db, options) {
         type: 'object',
         properties: {
           type: 'array',
-          items: { type: 'string', enum: ['create', 'read', 'update', 'delete'] },
+          items: { type: 'string', enum: ['create', 'read', 'update', 'delete'] }
         },
         default: { actions: ['read'] }
       }
     }, options.scopes)
   }
 
-  var options = extend({
+  options = extend({
     db: db,
     email: { type: 'string' },
-    username: { type: ['string', 'null']},
+    username: { type: ['string', 'null'] },
     required: ['email'],
     indexKeys: ['email', 'username', 'profile'],
     login: {}

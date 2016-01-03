@@ -5,7 +5,7 @@ var auth = require('../lib/auth')('test')
 var fixtures = require('./fixtures/auth')
 
 test('private object inaccessible to account without proper role', function (t) {
-  var obj  = fixtures.objects[0]
+  var obj = fixtures.objects[0]
   var account = fixtures.accounts[3]
   t.notOk(auth.isPublic(obj), 'example object is private')
   t.notOk(auth.checkRoles(obj.key, account), 'account does not have access')
@@ -13,7 +13,7 @@ test('private object inaccessible to account without proper role', function (t) 
 })
 
 test('collaborator can access private object if they have object key', function (t) {
-  var obj  = fixtures.objects[0]
+  var obj = fixtures.objects[0]
   var account = fixtures.accounts[2]
   t.notOk(auth.isPublic(obj), 'example object is private')
   t.ok(auth.checkRoles(obj.key, account), 'account has access')
@@ -21,7 +21,7 @@ test('collaborator can access private object if they have object key', function 
 })
 
 test('owner can access private object if they have object key', function (t) {
-  var obj  = fixtures.objects[1]
+  var obj = fixtures.objects[1]
   var account = fixtures.accounts[1]
   t.notOk(auth.isPublic(obj), 'example object is private')
   t.ok(auth.checkRoles(obj.key, account), 'account has access')
@@ -43,7 +43,7 @@ test('admin can access all objects', function (t) {
 })
 
 test('public object is accessible by any account', function (t) {
-  var obj  = fixtures.objects[2]
+  var obj = fixtures.objects[2]
   t.ok(auth.isPublic(obj), 'example object is public')
   t.end()
 })
@@ -78,12 +78,13 @@ test('create accounts model with custom scope', function (t) {
     }
   })
 
-  var data = { 
+  var data = {
     login: { basic: { key: 'o4no34inro34int', password: 'poop' } },
     value: { email: 'cool@example.com', roles: { admin: true } }
   }
 
   accounts.create(data, function (err, account) {
+    t.notOk(err)
     t.ok(account.scopes)
     t.ok(account.scopes.posts)
     t.ok(account.scopes.posts.actions)
@@ -94,7 +95,7 @@ test('create accounts model with custom scope', function (t) {
 })
 
 test('init accounts-api with custom scope', function (t) {
-  var createAccounts = require('../index')({
+  var accounts = require('../index')(memdb(), {
     secret: 'test',
     scopes: {
       posts: {
@@ -110,14 +111,13 @@ test('init accounts-api with custom scope', function (t) {
     }
   })
 
-  var accounts = createAccounts({ db: memdb() })
-
-  var data = { 
+  var data = {
     login: { basic: { key: 'o4no34inro34int', password: 'poop' } },
     value: { email: 'cool@example.com', roles: { admin: true } }
   }
 
   accounts.model.create(data, function (err, account) {
+    t.notOk(err)
     t.ok(account.scopes)
     t.ok(account.scopes.posts)
     t.ok(account.scopes.posts.actions)
