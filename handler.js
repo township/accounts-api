@@ -5,7 +5,7 @@ var jsonBody = require('body/json')
 var through = require('through2')
 var filter = require('filter-object')
 
-var errorResponse = require('./lib/error-response')
+var errorResponse = require('./error-response')
 
 module.exports = AccountsApiHandler
 
@@ -13,7 +13,7 @@ function AccountsApiHandler (accounts, options) {
   if (!(this instanceof AccountsApiHandler)) return new AccountsApiHandler(accounts, options)
   this.model = accounts
   var secret = options.secret || 's3cr3t_Pa55w0rd'
-  this.auth = options.auth || require('./lib/auth')(secret)
+  this.auth = options.auth || require('./auth')(secret)
 }
 
 /*

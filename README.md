@@ -1,4 +1,4 @@
-# accounts-api [![Build Status](https://travis-ci.org/LukeSwart/accounts-api.svg?branch=master)](https://travis-ci.org/LukeSwart/accounts-api)
+# accounts-api [![Build Status](https://travis-ci.org/township/accounts-api.svg?branch=master)](https://travis-ci.org/township/accounts-api)
 
 
 This app follows a few constraints to try and make it easy to plug into a node http server.
