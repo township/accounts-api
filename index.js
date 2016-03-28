@@ -3,7 +3,7 @@ var extend = require('extend')
 module.exports = function (db, options) {
   options = options || {}
   var model = require('./model')(db, options)
-  var auth = require('./lib/auth')(options.secret, options)
+  var auth = require('./auth')(options.secret, options)
   var handler = require('./handler')(model, extend({ auth: auth }, options))
   var routes = require('./routes')(handler, options)
 

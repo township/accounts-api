@@ -1,7 +1,7 @@
 var test = require('tape')
 var memdb = require('memdb')
 var each = require('each-async')
-var auth = require('../lib/auth')('test')
+var auth = require('../auth')('test')
 var fixtures = require('./fixtures/auth')
 
 test('private object inaccessible to account without proper role', function (t) {

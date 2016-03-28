@@ -6,7 +6,7 @@ var cuid = require('cuid')
 var db = require('memdb')()
 
 var secret = 's3cr3t_Pa55w0rd'
-var auth = require('../lib/auth')(secret)
+var auth = require('../auth')(secret)
 var accountsModel = require('../model')(db)
 var accountsHandler = require('../handler')(accountsModel, { auth: auth })
 
